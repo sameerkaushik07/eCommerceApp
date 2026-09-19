@@ -34,6 +34,11 @@ const Navbar = ()=>{
                     <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden"/>
                  </NavLink>
 
+                  <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} className='flex flex-col items-center gap-1' >
+                    <p>Admin</p>
+                    <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden"/>
+                 </a>
+
             </ul>
             <div className="flex item-center gap-6">
                 <img onClick={()=>setShowSearch(true)} src={assets.search_icon} className="w-5 cursor-pointer" alt="" />
@@ -42,6 +47,7 @@ const Navbar = ()=>{
                     <Link to='/login'><img src={assets.profile_icon} className="w-5 cursor-pointer" alt="" /></Link>
                     <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
                         <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded">
+                            <Link to='/login' className="cursor-pointer hover:text-black">Login</Link>
                             <p className="cursor-pointer hover:text-black">My Profile</p>
                             <p className="cursor-pointer hover:text-black">Orders</p>
                             <p className="cursor-pointer hover:text-black">Logout</p>
@@ -68,6 +74,7 @@ const Navbar = ()=>{
                     <NavLink to='/collection' onClick={()=>setVisible(false)} className='py-2 pl-6 border'>Collection</NavLink>
                     <NavLink to='/about' onClick={()=>setVisible(false)} className='py-2 pl-6 border'>About</NavLink>
                     <NavLink to='/contact' onClick={()=>setVisible(false)} className='py-2 pl-6 border'>Contact</NavLink>
+                    <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} onClick={()=>setVisible(false)} className='py-2 pl-6 border'>Admin</a>
 
                 </div>
             </div>
