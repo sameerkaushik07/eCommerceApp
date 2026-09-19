@@ -22,7 +22,12 @@ const ShopContextProvider = (props)=>{
                 if (!response.data.success) {
                     throw new Error(response.data.message || 'Unable to load products');
                 }
-                setProducts(response.data.products);
+                setProducts(response.data.products.map((product) => ({
+                    ...product,
+                    image: product.image.map((image) => (
+                        image.startsWith('http') ? image : `${backendUrl}${image}`
+                    )),
+                })));
             } catch (error) {
                 toast.error(error.message || 'Unable to load products');
             }
