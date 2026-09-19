@@ -5,9 +5,10 @@ const orderSchema = new mongoose.Schema({
     items: { type: Array, required: true },
     amount: { type: Number, required: true },
     address: { type: Object, required: true },
-    status: { type: String, default: "Food Processing" },
-    date: { type: Date, default: Date.now() },
-    payment: { type: Boolean, default: false }
+    status: { type: String, default: "Order Placed" },
+    date: { type: Date, default: Date.now },
+    payment: { type: Boolean, default: false },
+    paymentMethod: { type: String, enum: ["cod", "stripe", "razorpay"], default: "cod" }
 });
 
 // If the model already exists, use it, otherwise create a new one.
