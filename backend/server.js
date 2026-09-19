@@ -18,8 +18,12 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 
 // Connect to databases
 await connectDB();
-const syncedProducts = await syncCatalog();
-console.log(`Catalog synchronized: ${syncedProducts} products`);
+try {
+    const syncedProducts = await syncCatalog();
+    console.log(`Catalog synchronized: ${syncedProducts} products`);
+} catch (error) {
+    console.error("Catalog synchronization failed; continuing with the existing ERP catalog:", error.message);
+}
 connectCloudinary();
 
 // Middleware

@@ -7,7 +7,10 @@ const authMiddleware = async (req, res, next) => {
     }
     try {
         const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-        req.body.userId = token_decode.id;
+        if (!token_decode.id) {
+            return res.status(401).json({ success: false, message: "Authorization failed, token is not valid." });
+        }
+        req.userId = String(token_decode.id);
         next();
     } catch (error) {
         console.log(error);

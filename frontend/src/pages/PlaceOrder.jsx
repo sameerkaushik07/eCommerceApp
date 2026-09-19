@@ -11,7 +11,7 @@ const PlaceOrder = ()=>{
     const[method,setMethod]=useState('cod');
     const[formData,setFormData]=useState({});
     const[loading,setLoading]=useState(false);
-    const {navigate, products, cartItems, getCartAmount} = useContext(ShopContext);
+    const {navigate, products, cartItems} = useContext(ShopContext);
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
     const updateField = (event) => {
@@ -28,13 +28,14 @@ const PlaceOrder = ()=>{
 
         const items = Object.entries(cartItems).flatMap(([productId, sizes]) => {
             const product = products.find((item) => item._id === productId);
+            if (!product) return [];
             return Object.entries(sizes)
                 .filter(([, quantity]) => quantity > 0)
-                .map(([size, quantity]) => ({ ...product, size, quantity }));
+                .map(([size, quantity]) => ({ productId: product._id, size, quantity }));
         });
 
         if (items.length === 0) {
-            toast.error('Your cart is empty');
+            toast.error(products.length === 0 ? 'Products are still loading. Please try again.' : 'Your cart is empty');
             return;
         }
 
@@ -42,7 +43,6 @@ const PlaceOrder = ()=>{
         try {
             const response = await axios.post(`${backendUrl}/api/order/place`, {
                 items,
-                amount: getCartAmount() + 10,
                 address: formData,
                 paymentMethod: method,
             }, { headers: { token } });
@@ -51,6 +51,13 @@ const PlaceOrder = ()=>{
             toast.success('Payment approved and order placed');
             navigate('/orders');
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                window.dispatchEvent(new Event('auth-change'));
+                toast.error('Your session expired. Please log in again');
+                navigate('/login');
+                return;
+            }
             toast.error(error.response?.data?.message || error.message || 'Unable to place order');
         } finally {
             setLoading(false);

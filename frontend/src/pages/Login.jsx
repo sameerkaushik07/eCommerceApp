@@ -21,6 +21,7 @@ const Login = ()=>{
             });
             if (!response.data.success) throw new Error(response.data.message);
             localStorage.setItem('token', response.data.token);
+            window.dispatchEvent(new Event('auth-change'));
             toast.success(isLogin ? 'Logged in successfully' : 'Account created successfully');
             navigate('/');
         } catch (error) {

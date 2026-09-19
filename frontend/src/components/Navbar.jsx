@@ -1,7 +1,7 @@
 import React from "react";
 import{assets} from '../assets/assets'
 import { Link,NavLink } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 
@@ -9,7 +9,18 @@ import { ShopContext } from '../context/ShopContext';
 
 const Navbar = ()=>{
     const[visible,setVisible]=useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(Boolean(localStorage.getItem('token')));
     const {setShowSearch,getCartCount}=useContext(ShopContext);
+    useEffect(() => {
+        const updateAuth = () => setIsAuthenticated(Boolean(localStorage.getItem('token')));
+        window.addEventListener('auth-change', updateAuth);
+        return () => window.removeEventListener('auth-change', updateAuth);
+    }, []);
+    const logout = () => {
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        window.dispatchEvent(new Event('auth-change'));
+    };
     return(
         <div className="flex items-center justify-between py-5  font-medium">
            <Link to='/'> <img src={assets.logo} className="w-36" alt="Logo" /></Link>
@@ -44,13 +55,13 @@ const Navbar = ()=>{
                 <img onClick={()=>setShowSearch(true)} src={assets.search_icon} className="w-5 cursor-pointer" alt="" />
 
                 <div className="group relative">
-                    <Link to='/login'><img src={assets.profile_icon} className="w-5 cursor-pointer" alt="" /></Link>
+                    <Link to={isAuthenticated ? '/orders' : '/login'}><img src={assets.profile_icon} className="w-5 cursor-pointer" alt="" /></Link>
                     <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
                         <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded">
-                            <Link to='/login' className="cursor-pointer hover:text-black">Login</Link>
-                            <p className="cursor-pointer hover:text-black">My Profile</p>
-                            <p className="cursor-pointer hover:text-black">Orders</p>
-                            <p className="cursor-pointer hover:text-black">Logout</p>
+                            {isAuthenticated ? <>
+                                <Link to='/orders' className="cursor-pointer hover:text-black">My Orders</Link>
+                                <button onClick={logout} className="text-left cursor-pointer hover:text-black">Logout</button>
+                            </> : <Link to='/login' className="cursor-pointer hover:text-black">Login</Link>}
                         </div>
                     </div>
                 </div>
