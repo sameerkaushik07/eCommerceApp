@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
+    _id: {
+        type: String,
+        default: () => new mongoose.Types.ObjectId().toString()
+    },
     name:{
         type:String,
         required:true
@@ -14,7 +18,7 @@ const productSchema = new mongoose.Schema({
         required:true
     },
     image:{
-        type:Array,
+        type:[String],
         required:true
     },
     category:{
@@ -29,7 +33,7 @@ const productSchema = new mongoose.Schema({
         type:Array,
         required:true
     },
-    bestSeller:{
+    bestseller:{
         type:Boolean,
         required:true
     },
