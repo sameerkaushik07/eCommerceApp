@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from 'cloudinary'
 import productModal from '../models/productModel.js';
+import deletedProductModel from '../models/deletedProductModel.js';
 
 
 //function for add product
@@ -75,7 +76,21 @@ const removeProduct = async (req,res) =>{
     
     try {
          const {productId} = req.body;
-        await productModal.findByIdAndDelete(productId)
+        if (!productId) {
+            return res.status(400).json({success:false,message:'Product id is required'})
+        }
+
+        const removedProduct = await productModal.findOneAndDelete({_id: productId})
+        if (!removedProduct) {
+            return res.status(404).json({success:false,message:'Product not found'})
+        }
+
+        await deletedProductModel.findOneAndUpdate(
+            {_id: productId},
+            {$set: {deletedAt: new Date()}},
+            {upsert: true, new: true}
+        )
+
         res.json({success:true,message:'product removed successfully'})
 
 

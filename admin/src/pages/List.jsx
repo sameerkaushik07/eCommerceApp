@@ -6,6 +6,7 @@ import { toast } from 'react-toastify'
 const List = ({token}) => {
 
   const[list,setList] = useState([])
+  const [removingId, setRemovingId] = useState('')
   const getImageUrl = (image) => {
     if (!image) return ''
     return image.startsWith('http') ? image : `${backendUrl}${image.startsWith('/') ? image : `/${image}`}`
@@ -30,12 +31,12 @@ const List = ({token}) => {
 
   const removeProduct = async (productId) =>{
     try {
-      
+      setRemovingId(productId)
       const response = await axios.post(backendUrl + '/api/product/remove',{productId},{headers:{token}})
 
       if(response.data.success){
         toast.success(response.data.message)
-        await fetchList();
+        setList((currentList) => currentList.filter((product) => product._id !== productId))
       }else{
         toast.error(response.data.message)
       }
@@ -44,6 +45,8 @@ const List = ({token}) => {
     } catch (error) {
       console.log(error);
       toast.error(error.message)
+    } finally {
+      setRemovingId('')
     }
   }
 
@@ -68,13 +71,21 @@ const List = ({token}) => {
         {/* Product List */}
 
         {
-          list.map((item,index)=>(
-            <div key={index} className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm'>
+          list.map((item)=>(
+            <div key={item._id} className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm'>
               <img className='w-12 h-12 object-cover' src={getImageUrl(item.image?.[0])} alt={item.name} />
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>{currency}{item.price}</p>
-              <p onClick={()=>removeProduct(item._id)} className='text-right md:text-center cursor-pointer text-lg'>X</p>
+              <button
+                type='button'
+                onClick={() => removeProduct(item._id)}
+                disabled={removingId === item._id}
+                aria-label={`Remove ${item.name}`}
+                className='text-right md:text-center cursor-pointer text-lg disabled:cursor-wait disabled:opacity-50'
+              >
+                X
+              </button>
 
             </div>
           ))

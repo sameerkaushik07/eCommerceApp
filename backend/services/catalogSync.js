@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import productModel from "../models/productModel.js";
+import deletedProductModel from "../models/deletedProductModel.js";
 
 const backendDirectory = path.dirname(fileURLToPath(import.meta.url));
 const catalogFile = path.resolve(backendDirectory, "../../frontend/src/assets/assets.js");
@@ -52,14 +53,21 @@ const readCatalog = async () => {
 
 const syncCatalog = async () => {
     const products = await readCatalog();
-    await productModel.bulkWrite(products.map((product) => ({
+    const deletedProducts = await deletedProductModel
+        .find({ _id: { $in: products.map((product) => product._id) } })
+        .select("_id")
+        .lean();
+    const deletedProductIds = new Set(deletedProducts.map((product) => product._id));
+    const activeProducts = products.filter((product) => !deletedProductIds.has(product._id));
+
+    await productModel.bulkWrite(activeProducts.map((product) => ({
         updateOne: {
             filter: { _id: product._id },
             update: { $set: product },
             upsert: true,
         },
     })));
-    return products.length;
+    return activeProducts.length;
 };
 
 export { readCatalog };
