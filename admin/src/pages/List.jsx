@@ -6,6 +6,10 @@ import { toast } from 'react-toastify'
 const List = ({token}) => {
 
   const[list,setList] = useState([])
+  const getImageUrl = (image) => {
+    if (!image) return ''
+    return image.startsWith('http') ? image : `${backendUrl}${image.startsWith('/') ? image : `/${image}`}`
+  }
 
   const fetchList = async () => {
 
@@ -66,7 +70,7 @@ const List = ({token}) => {
         {
           list.map((item,index)=>(
             <div key={index} className='grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm'>
-              <img className='w-12' src={item.image[0]} alt="" />
+              <img className='w-12 h-12 object-cover' src={getImageUrl(item.image?.[0])} alt={item.name} />
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>{currency}{item.price}</p>
