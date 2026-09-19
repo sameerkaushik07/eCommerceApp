@@ -1,37 +1,86 @@
 import React, { useContext, useState } from "react";
+import axios from "axios";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
+import { toast } from "react-toastify";
 
 
 const PlaceOrder = ()=>{
     const[method,setMethod]=useState('cod');
-    const {navigate} = useContext(ShopContext);
+    const[formData,setFormData]=useState({});
+    const[loading,setLoading]=useState(false);
+    const {navigate, products, cartItems, getCartAmount} = useContext(ShopContext);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+
+    const updateField = (event) => {
+        setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
+    };
+
+    const submitOrder = async (event) => {
+        event.preventDefault();
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error('Please log in before placing an order');
+            return;
+        }
+
+        const items = Object.entries(cartItems).flatMap(([productId, sizes]) => {
+            const product = products.find((item) => item._id === productId);
+            return Object.entries(sizes)
+                .filter(([, quantity]) => quantity > 0)
+                .map(([size, quantity]) => ({ ...product, size, quantity }));
+        });
+
+        if (items.length === 0) {
+            toast.error('Your cart is empty');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await axios.post(`${backendUrl}/api/order/place`, {
+                items,
+                amount: getCartAmount() + 10,
+                address: formData,
+                paymentMethod: method,
+            }, { headers: { token } });
+
+            if (!response.data.success) throw new Error(response.data.message);
+            toast.success('Payment approved and order placed');
+            navigate('/orders');
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message || 'Unable to place order');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return(
-        <div className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
+        <form onSubmit={submitOrder} className="flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t">
             {/* --------Left Side-------- */}
             <div className="flex flex-col gap-4 w-full sm:max-w-120">
                 <div className="text-xl my-3">
                     <Title text1={'DELIVERY'} text2={'INFORMATION'} />
                 </div>
                 <div className="flex gap-3">
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="First Name" />
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Last Name" />
+                    <input name="firstName" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="First Name" />
+                    <input name="lastName" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Last Name" />
                 </div> 
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="email" placeholder="Email Address" />
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Street" />
+                    <input name="email" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="email" placeholder="Email Address" />
+                    <input name="street" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Street" />
                 
                  <div className="flex gap-3">
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="City" />
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="State" />
+                    <input name="city" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="City" />
+                    <input name="state" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="State" />
                 </div> 
 
                  <div className="flex gap-3">
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="number" placeholder="Zipcode" />
-                    <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Country" />
+                    <input name="zipcode" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="number" placeholder="Zipcode" />
+                    <input name="country" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="text" placeholder="Country" />
                 </div> 
-                <input className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="number" placeholder="Phone" />
+                <input name="phone" onChange={updateField} required className="border border-gray-30 rounded py-1.5 px-3.5 w-full" type="tel" placeholder="Phone" />
             </div>
             {/* ----------------Right side----------------- */}
 
@@ -61,15 +110,15 @@ const PlaceOrder = ()=>{
                         </div>
                     </div>
                     <div className="w-full text-end mt-8">
-                        <button onClick={()=>navigate('/orders')} className="bg-black text-white text-sm my-8 px-16 py-3" >
-                            PLACE ORDER
+                        <button disabled={loading} type="submit" className="bg-black text-white text-sm my-8 px-16 py-3 disabled:opacity-50" >
+                            {loading ? 'PROCESSING...' : 'PLACE ORDER'}
                         </button>
                         
 
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
     )
 }
 export default PlaceOrder;
