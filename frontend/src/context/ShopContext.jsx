@@ -60,6 +60,7 @@ const ShopContextProvider = (props)=>{
 
         }
         setCartItem(cartData);
+        toast.success('Product added to cart');
 
     }
 
