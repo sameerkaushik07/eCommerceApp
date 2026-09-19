@@ -1,5 +1,5 @@
 import orderModel from "../models/orderModel.js";
-import userModel from "../models/userModel.js";
+import userModel from "../models/useModel.js";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -57,8 +57,13 @@ const placeOrder = async (req, res) => {
 
 // Listing orders for admin panel
 const listOrders = async (req, res) => {
-    // Implementation for listing orders will go here
-    res.json({ success: true, message: "Order list endpoint is ready." });
+    try {
+        const orders = await orderModel.find({}).sort({ date: -1 });
+        res.json({ success: true, orders });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
 };
 
 export { placeOrder, listOrders };

@@ -1,18 +1,40 @@
-import { createContext, useEffect } from "react";
-import { products } from "../assets/assets";
-import { useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 export const ShopContext = createContext();
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const ShopContextProvider = (props)=>{
 
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
     const currency = '$';
     const delivery_fee = 10;
     const[search,setSearch]=useState('');
     const[showSearch,setShowSearch]=useState(false);
     const[cartItems,setCartItem]=useState({})
+    const[products,setProducts]=useState([])
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await axios.get(`${backendUrl}/api/product/list`);
+                if (!response.data.success) {
+                    throw new Error(response.data.message || 'Unable to load products');
+                }
+                setProducts(response.data.products.map((product) => ({
+                    ...product,
+                    image: product.image.map((image) => (
+                        image.startsWith('http') ? image : `${backendUrl}${image}`
+                    )),
+                })));
+            } catch (error) {
+                toast.error(error.message || 'Unable to load products');
+            }
+        };
+
+        fetchProducts();
+    }, [backendUrl]);
 
 
 
@@ -45,13 +67,9 @@ const ShopContextProvider = (props)=>{
         let totalCount = 0;
         for(const items in cartItems){
             for(const item in cartItems[items]){
-              try{  
-                if (cartItems[items][item]>0)
+                if (cartItems[items][item]>0) {
                 totalCount += cartItems[items][item];
-              }catch(err){
-                 log(err);   
-              }
-           
+                }
             }
 
         }
@@ -70,13 +88,10 @@ const ShopContextProvider = (props)=>{
         let totalAmount = 0;
         for(const items in cartItems){
             let itemInfo = products.find((product)=>product._id === items);
+            if (!itemInfo) continue;
             for(const item in cartItems[items]){
-                try {
-                    if (cartItems[items][item]>0){
-                        totalAmount += itemInfo.price * cartItems[items][item];
-                    }
-                } catch (error) {
-                    
+                if (cartItems[items][item]>0){
+                    totalAmount += itemInfo.price * cartItems[items][item];
                 }
             }
         }
